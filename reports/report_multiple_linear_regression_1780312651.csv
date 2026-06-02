@@ -1,0 +1,21 @@
+Machine Learning Testing Platform - Model Report
+Generated At,2026-06-01 16:47:31
+
+Model Metadata
+Algorithm,Multiple Linear Regression
+Dataset,iris_flower.csv
+Task Type,regression
+Target Column,SepalLength
+Training Time (s),0.0341
+
+Model Hyperparameters
+missing_strategy,mean
+scaling_strategy,standard
+test_size,0.2
+
+Evaluation Metrics
+MAE,0.22766
+MSE,0.09211
+RMSE,0.30350
+R2,0.86655
+ADJUSTED_R2,0.83174

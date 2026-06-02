@@ -1,0 +1,252 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Model Comparison - ML Testing Platform{% endblock %}
+{% block page_header %}Algorithm Comparison Center{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Comparison Selection Card -->
+    <div class="card glass-card mb-4" data-aos="fade-up">
+        <h5 class="font-heading fw-bold mb-3"><i class="fa-solid fa-code-compare text-primary me-2"></i>Select Models to Compare</h5>
+        
+        <form action="{{ url_for('model_comparison') }}" method="POST">
+            <div class="row g-4">
+                <!-- Regression selection -->
+                <div class="col-md-6 border-end" style="border-color: var(--border-color) !important;">
+                    <h6 class="font-heading fw-bold text-primary mb-2"><i class="fa-solid fa-chart-line me-1"></i>Regression Models</h6>
+                    <div class="p-3 rounded glass-panel" style="max-height: 200px; overflow-y: auto;">
+                        {% for model in regression_models %}
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="selected_models" value="{{ model.id }}" id="model-{{ model.id }}" {% if model.id in selected_ids %}checked{% endif %}>
+                            <label class="form-check-label small" for="model-{{ model.id }}">
+                                <strong>{{ model.model_name }}</strong> ({{ model.algorithm_name }})<br>
+                                <span class="text-muted">Dataset: {{ model.dataset_name }} | R²: {{ "%.4f"|format(model.metrics_dict.r2) if model.metrics_dict.r2 is not none else 'N/A' }}</span>
+                            </label>
+                        </div>
+                        {% else %}
+                        <div class="text-muted small py-3 text-center">No regression models trained yet.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Classification selection -->
+                <div class="col-md-6">
+                    <h6 class="font-heading fw-bold text-secondary mb-2"><i class="fa-solid fa-circle-nodes me-1"></i>Classification Models</h6>
+                    <div class="p-3 rounded glass-panel" style="max-height: 200px; overflow-y: auto;">
+                        {% for model in classification_models %}
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="selected_models" value="{{ model.id }}" id="model-{{ model.id }}" {% if model.id in selected_ids %}checked{% endif %}>
+                            <label class="form-check-label small" for="model-{{ model.id }}">
+                                <strong>{{ model.model_name }}</strong> ({{ model.algorithm_name }})<br>
+                                <span class="text-muted">Dataset: {{ model.dataset_name }} | Acc: {{ "%.4f"|format(model.metrics_dict.accuracy) if model.metrics_dict.accuracy is not none else 'N/A' }}</span>
+                            </label>
+                        </div>
+                        {% else %}
+                        <div class="text-muted small py-3 text-center">No classification models trained yet.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 d-flex justify-content-between align-items-center">
+                <small class="text-muted"><i class="fa-solid fa-triangle-exclamation text-warning me-1"></i> Compare models of the same type (regression or classification) at a time.</small>
+                <button type="submit" class="btn btn-primary-glow font-heading px-4">
+                    <i class="fa-solid fa-play me-2"></i> Compare Selected Models
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Comparison Results View -->
+    {% if comparison_results %}
+    <div class="row g-4" data-aos="fade-up" data-aos-delay="100">
+        <!-- 1. Comparison Ranking Grid -->
+        <div class="col-xl-6">
+            <div class="card glass-card h-100">
+                <h5 class="font-heading fw-bold mb-3"><i class="fa-solid fa-ranking-star text-secondary me-2"></i>Performance Leaderboard Ranking</h5>
+                <div class="custom-table-container">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Model & Algorithm</th>
+                                <th>Dataset</th>
+                                <th>Primary Metric</th>
+                                <th>Train Speed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model in comparison_results %}
+                            <tr>
+                                <td class="fw-bold">
+                                    {% if loop.index == 1 %}
+                                        <i class="fa-solid fa-medal gold-medal"></i> 1
+                                    {% elif loop.index == 2 %}
+                                        <i class="fa-solid fa-medal silver-medal"></i> 2
+                                    {% elif loop.index == 3 %}
+                                        <i class="fa-solid fa-medal bronze-medal"></i> 3
+                                    {% else %}
+                                        {{ loop.index }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ model.model_name }}</strong><br>
+                                    <small class="text-muted">{{ model.algorithm_name }}</small>
+                                </td>
+                                <td>{{ model.dataset_name }}</td>
+                                <td class="fw-bold text-primary">
+                                    {% if task_type == 'regression' %}
+                                        R²: {{ "%.4f"|format(model.metrics_dict.r2) }}
+                                    {% else %}
+                                        Acc: {{ "%.4f"|format(model.metrics_dict.accuracy) }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ "%.4f"|format(model.train_time) }}s</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Detailed Metrics Comparison -->
+        <div class="col-xl-6">
+            <div class="card glass-card h-100">
+                <h5 class="font-heading fw-bold mb-3"><i class="fa-solid fa-list-check text-accent me-2"></i>Detailed Evaluation Matrix</h5>
+                <div class="custom-table-container">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                {% if task_type == 'regression' %}
+                                    <th>R²</th>
+                                    <th>Adj. R²</th>
+                                    <th>RMSE</th>
+                                    <th>MAE</th>
+                                {% else %}
+                                    <th>Accuracy</th>
+                                    <th>F1 Score</th>
+                                    <th>ROC AUC</th>
+                                    <th>Precision</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model in comparison_results %}
+                            <tr>
+                                <td class="fw-bold">{{ model.model_name }}</td>
+                                {% if task_type == 'regression' %}
+                                    <td>{{ "%.4f"|format(model.metrics_dict.r2) }}</td>
+                                    <td>{{ "%.4f"|format(model.metrics_dict.adjusted_r2) }}</td>
+                                    <td>{{ "%.4f"|format(model.metrics_dict.rmse) }}</td>
+                                    <td>{{ "%.4f"|format(model.metrics_dict.mae) }}</td>
+                                {% else %}
+                                    <td>{{ "%.4f"|format(model.metrics_dict.accuracy) }}</td>
+                                    <td>{{ "%.4f"|format(model.metrics_dict.f1_score) }}</td>
+                                    <td>{{ "%.4f"|format(model.metrics_dict.roc_auc) }}</td>
+                                    <td>{{ "%.4f"|format(model.metrics_dict.precision) }}</td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Comparative Charts -->
+        <div class="col-12">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card glass-card">
+                        <div class="card-header bg-transparent border-0 pb-0 mb-3">
+                            <h6 class="font-heading fw-bold mb-1">Primary Evaluation Metrics</h6>
+                            <small class="text-muted">Performance comparison across selected models</small>
+                        </div>
+                        <div class="plot-container">
+                            <div id="chartMetric" style="height: 350px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card glass-card">
+                        <div class="card-header bg-transparent border-0 pb-0 mb-3">
+                            <h6 class="font-heading fw-bold mb-1">Training Time Comparison</h6>
+                            <small class="text-muted">Model training duration in seconds</small>
+                        </div>
+                        <div class="plot-container">
+                            <div id="chartTime" style="height: 350px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if comparison_results %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Render comparison charts
+        const models = [{% for m in comparison_results %}"{{ m.model_name }}",{% endfor %}];
+        
+        // 1. Primary Metrics Chart
+        const metricValues = [
+            {% for m in comparison_results %}
+                {% if task_type == 'regression' %}
+                    {{ m.metrics_dict.r2 }},
+                {% else %}
+                    {{ m.metrics_dict.accuracy }},
+                {% endif %}
+            {% endfor %}
+        ];
+        
+        const metricName = "{{ 'R2 Score' if task_type == 'regression' else 'Accuracy Score' }}";
+        const metricColor = "{{ '#4F46E5' if task_type == 'regression' else '#7C3AED' }}";
+        
+        const metricTrace = {
+            x: models,
+            y: metricValues,
+            type: 'bar',
+            marker: { color: metricColor },
+            name: metricName
+        };
+        
+        const layoutMetric = {
+            title: `Comparison: ${metricName}`,
+            yaxis: { title: 'Score', range: [0, 1.05] },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { color: 'gray' }
+        };
+        
+        Plotly.newPlot('chartMetric', [metricTrace], layoutMetric, {responsive: true});
+        
+        // 2. Training Time Chart
+        const timeValues = [{% for m in comparison_results %}{{ m.train_time }},{% endfor %}];
+        
+        const timeTrace = {
+            x: models,
+            y: timeValues,
+            type: 'bar',
+            marker: { color: '#06B6D4' },
+            name: 'Training Speed (seconds)'
+        };
+        
+        const layoutTime = {
+            title: 'Comparison: Training Speeds',
+            yaxis: { title: 'Time (s)' },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { color: 'gray' }
+        };
+        
+        Plotly.newPlot('chartTime', [timeTrace], layoutTime, {responsive: true});
+    });
+</script>
+{% endif %}
+{% endblock %}

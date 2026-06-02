@@ -1,0 +1,182 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Model Catalog - ML Testing Platform{% endblock %}
+{% block page_header %}Algorithm Catalog{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Top Filter Bar -->
+    <div class="card glass-card mb-4" data-aos="fade-up">
+        <div class="row align-items-center g-3">
+            <div class="col-md-6">
+                <h3 class="font-heading fw-bold mb-1">Explore Algorithms</h3>
+                <p class="text-muted small mb-0">Browse through the available estimators or type in the search bar to locate specific models.</p>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text" style="background: transparent; border-color: var(--border-color); color: var(--color-text-muted);">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" class="form-control font-heading" id="algoSearchInput" placeholder="Search algorithms (e.g. Random Forest, SVM, PCA)..." oninput="filterAlgorithms(this.value)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards Catalog -->
+    <div class="row g-4">
+        <!-- 1. Supervised Learning Card -->
+        <div class="col-lg-6" data-aos="fade-right">
+            <div class="card glass-card h-100">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="bg-primary-light rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <i class="fa-solid fa-brain fs-3 text-primary"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-heading fw-bold mb-0">Supervised Learning</h4>
+                        <p class="text-muted small mb-0">Algorithms trained on labeled datasets to make numeric or categorical predictions.</p>
+                    </div>
+                </div>
+
+                <!-- Regression list -->
+                <div class="mb-4">
+                    <h6 class="font-heading fw-bold text-primary border-bottom pb-2 mb-3"><i class="fa-solid fa-chart-line me-1"></i>Regression Algorithms</h6>
+                    <div class="row g-2">
+                        {% for reg_id, reg_name, reg_desc in [
+                            ('linear_regression', 'Linear Regression', 'Fits a linear line matching a single continuous feature.'),
+                            ('multiple_linear_regression', 'Multiple Linear Regression', 'Fits a linear hyperplane on multiple features.'),
+                            ('polynomial_regression', 'Polynomial Regression', 'Models non-linear properties using polynomial feature expansion.'),
+                            ('ridge_regression', 'Ridge Regression', 'L2 regularized linear model preventing parameter inflation.'),
+                            ('lasso_regression', 'Lasso Regression', 'L1 regularized linear model performing automatic feature selection.'),
+                            ('decision_tree_regression', 'Decision Tree Regression', 'Splits feature space into leaves predicting continuous values.'),
+                            ('random_forest_regression', 'Random Forest Regression', 'Ensemble of Decision Trees predicting average outcomes.')
+                        ] %}
+                        <div class="col-12 algo-item" data-name="{{ reg_name }} {{ reg_desc }}">
+                            <div class="p-3 rounded glass-panel border" style="border-color: var(--border-color) !important;">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <h6 class="m-0 font-heading fw-bold text-main">{{ reg_name }}</h6>
+                                    <a href="{{ url_for('supervised_dashboard', task_type='regression', algo_id=reg_id) }}" class="btn btn-sm btn-primary-light text-primary py-0.5 px-2.5 font-heading">
+                                        Deploy
+                                    </a>
+                                </div>
+                                <p class="text-muted small mb-0">{{ reg_desc }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Classification list -->
+                <div>
+                    <h6 class="font-heading fw-bold text-secondary border-bottom pb-2 mb-3"><i class="fa-solid fa-circle-nodes me-1"></i>Classification Algorithms</h6>
+                    <div class="row g-2">
+                        {% for class_id, class_name, class_desc in [
+                            ('logistic_regression', 'Logistic Regression', 'Models category probabilities using logistic sigmoid functions.'),
+                            ('decision_tree_classifier', 'Decision Tree Classifier', 'Hierarchical tree splits separating labels paths.'),
+                            ('random_forest_classifier', 'Random Forest Classifier', 'Ensemble bagging classifier of randomized decision trees.'),
+                            ('knn', 'KNN (K-Nearest Neighbors)', 'Classifies classes by voting distances of K closest neighbors.'),
+                            ('naive_bayes', 'Naive Bayes', 'Probabilistic classification based on Bayes rule and conditional independence.'),
+                            ('svm', 'Support Vector Machine', 'Finds optimal hyperplane separator maximizing class margins.'),
+                            ('gradient_boosting', 'Gradient Boosting', 'Ensembles trees sequentially correcting residual mistakes.'),
+                            ('xgboost', 'XGBoost Classifier', 'Highly optimized histogram gradient boosting estimator.')
+                        ] %}
+                        <div class="col-12 algo-item" data-name="{{ class_name }} {{ class_desc }}">
+                            <div class="p-3 rounded glass-panel border" style="border-color: var(--border-color) !important;">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <h6 class="m-0 font-heading fw-bold text-main">{{ class_name }}</h6>
+                                    <a href="{{ url_for('supervised_dashboard', task_type='classification', algo_id=class_id) }}" class="btn btn-sm btn-secondary-light text-secondary py-0.5 px-2.5 font-heading">
+                                        Deploy
+                                    </a>
+                                </div>
+                                <p class="text-muted small mb-0">{{ class_desc }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Unsupervised Learning Card -->
+        <div class="col-lg-6" data-aos="fade-left">
+            <div class="card glass-card h-100">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="bg-secondary-light rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <i class="fa-solid fa-shapes fs-3 text-secondary"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-heading fw-bold mb-0">Unsupervised Learning</h4>
+                        <p class="text-muted small mb-0">Analyzes structural features to identify hidden patterns, groupings, or dimensions without labels.</p>
+                    </div>
+                </div>
+
+                <!-- Clustering list -->
+                <div class="mb-4">
+                    <h6 class="font-heading fw-bold text-accent border-bottom pb-2 mb-3"><i class="fa-solid fa-circle-nodes me-1"></i>Clustering</h6>
+                    <div class="row g-2">
+                        {% for clust_id, clust_name, clust_desc in [
+                            ('kmeans', 'K-Means Clustering', 'Partitions data points into K spherical cluster groupings based on centroids.'),
+                            ('hierarchical', 'Hierarchical Clustering', 'Builds nested cluster hierarchies via complete/ward tree linkages.'),
+                            ('dbscan', 'DBSCAN Clustering', 'Groups points based on density radii and identifies core/noise segments.')
+                        ] %}
+                        <div class="col-12 algo-item" data-name="{{ clust_name }} {{ clust_desc }}">
+                            <div class="p-3 rounded glass-panel border" style="border-color: var(--border-color) !important;">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <h6 class="m-0 font-heading fw-bold text-main">{{ clust_name }}</h6>
+                                    <a href="{{ url_for('unsupervised_dashboard', task_type='clustering') }}" class="btn btn-sm btn-accent-light text-info py-0.5 px-2.5 font-heading">
+                                        Deploy
+                                    </a>
+                                </div>
+                                <p class="text-muted small mb-0">{{ clust_desc }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Dim Reduction list -->
+                <div>
+                    <h6 class="font-heading fw-bold text-success border-bottom pb-2 mb-3"><i class="fa-solid fa-compress me-1"></i>Dimensionality Reduction</h6>
+                    <div class="row g-2">
+                        {% for dim_id, dim_name, dim_desc in [
+                            ('pca', 'PCA (Principal Component Analysis)', 'Projects data features onto orthogonal directions maximizing variance variance.'),
+                            ('tsne', 't-SNE Projection', 'Manifold reduction mapping high-dimensional spaces to local probabilities.')
+                        ] %}
+                        <div class="col-12 algo-item" data-name="{{ dim_name }} {{ dim_desc }}">
+                            <div class="p-3 rounded glass-panel border" style="border-color: var(--border-color) !important;">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <h6 class="m-0 font-heading fw-bold text-main">{{ dim_name }}</h6>
+                                    <a href="{{ url_for('unsupervised_dashboard', task_type='dimensionality') }}" class="btn btn-sm btn-outline-success py-0.5 px-2.5 font-heading">
+                                        Deploy
+                                    </a>
+                                </div>
+                                <p class="text-muted small mb-0">{{ dim_desc }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Client side filtering for instant catalog search
+    function filterAlgorithms(query) {
+        const cleanQuery = query.toLowerCase().trim();
+        const items = document.querySelectorAll('.algo-item');
+        
+        items.forEach(item => {
+            const dataText = item.getAttribute('data-name').toLowerCase();
+            if (dataText.includes(cleanQuery)) {
+                item.classList.remove('d-none');
+            } else {
+                item.classList.add('d-none');
+            }
+        });
+    }
+</script>
+{% endblock %}

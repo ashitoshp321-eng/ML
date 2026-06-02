@@ -1,0 +1,658 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Classification Dashboard - ML Testing Platform{% endblock %}
+{% block page_header %}Classification Testing Studio{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row g-4">
+        <!-- 1. Left Control Panel: Upload, Preprocess, and Train -->
+        <div class="col-xl-4 col-lg-5">
+            <!-- Data Source Selection -->
+            <div class="card glass-card mb-4" data-aos="fade-right">
+                <h5 class="font-heading fw-bold mb-3"><i class="fa-solid fa-file-arrow-up text-primary me-2"></i>1. Data Source</h5>
+                <form action="{{ url_for('upload_dataset', dashboard_type='classification') }}" method="POST" enctype="multipart/form-data" class="trigger-loading-form" data-loading-msg="Uploading & Analyzing Data...">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Select Sample Dataset</label>
+                        <select class="form-select font-heading" name="sample_name" onchange="this.form.submit()">
+                            <option value="">-- Choose Sample CSV --</option>
+                            {% for sample in samples %}
+                                <option value="{{ sample }}" {% if active_dataset == sample %}selected{% endif %}>{{ sample.replace('_', ' ').replace('.csv', '').title() }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="text-center my-2 text-muted small fw-bold">— OR —</div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Upload Custom CSV</label>
+                        <input class="form-control" type="file" name="file" accept=".csv" onchange="if(this.value) this.form.submit()">
+                    </div>
+                </form>
+            </div>
+
+            {% if df_exists %}
+            <!-- Preprocessing Configuration -->
+            <div class="card glass-card mb-4" data-aos="fade-right" data-aos-delay="100">
+                <h5 class="font-heading fw-bold mb-3"><i class="fa-solid fa-sliders text-secondary me-2"></i>2. Preprocessing Options</h5>
+                <form id="trainForm" action="{{ url_for('train_supervised', task_type='classification') }}" method="POST" class="trigger-loading-form" data-loading-msg="Running Pipeline & Fitting Model...">
+                    <input type="hidden" name="dataset_name" value="{{ active_dataset }}">
+                    
+                    <div class="mb-3">
+                        <label for="targetColumn" class="form-label small fw-bold">Target Column (y)</label>
+                        <select class="form-select" id="targetColumn" name="target_column" required>
+                            {% for col in columns %}
+                                <option value="{{ col }}" {% if col == columns[-1] %}selected{% endif %}>{{ col }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="missingStrategy" class="form-label small fw-bold">Impute Missing Numerical Values</label>
+                        <select class="form-select" id="missingStrategy" name="missing_strategy">
+                            <option value="mean">Mean</option>
+                            <option value="median" selected>Median (Recommended)</option>
+                            <option value="mode">Mode</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="scalingStrategy" class="form-label small fw-bold">Feature Scaling</label>
+                        <select class="form-select" id="scalingStrategy" name="scaling_strategy">
+                            <option value="standard">StandardScaler (Mean=0, Var=1)</option>
+                            <option value="minmax">MinMaxScaler (0 to 1)</option>
+                            <option value="none">No Scaling</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <label for="testSize" class="form-label small fw-bold">Test Split Ratio</label>
+                            <span id="testSizeLabel" class="badge bg-secondary-light text-secondary">20%</span>
+                        </div>
+                        <input type="range" class="form-range" min="10" max="50" step="5" value="20" id="testSize" name="test_size" oninput="document.getElementById('testSizeLabel').textContent = this.value + '%'">
+                    </div>
+
+                    <hr class="my-4" style="border-color: var(--border-color);">
+
+                    <h5 class="font-heading fw-bold mb-3"><i class="fa-solid fa-gears text-accent me-2"></i>3. Algorithm & Params</h5>
+                    
+                    <div class="mb-3">
+                        <label for="algoSelector" class="form-label small fw-bold">Algorithm</label>
+                        <select class="form-select font-heading" id="algoSelector" name="algorithm" onchange="toggleHyperparams(this.value)">
+                            <option value="logistic_regression">Logistic Regression</option>
+                            <option value="decision_tree_classifier">Decision Tree Classifier</option>
+                            <option value="random_forest_classifier">Random Forest Classifier</option>
+                            <option value="knn">K-Nearest Neighbors (KNN)</option>
+                            <option value="naive_bayes">Naive Bayes</option>
+                            <option value="svm">Support Vector Machine (SVM)</option>
+                            <option value="gradient_boosting">Gradient Boosting</option>
+                            <option value="xgboost">XGBoost Classifier</option>
+                        </select>
+                    </div>
+
+                    <!-- Dynamic Hyperparameter Blocks -->
+                    <div id="hyperparams-panel" class="mb-4 p-3 rounded glass-panel">
+                        <!-- Logistic Reg Params -->
+                        <div id="params-logistic" class="param-block d-none">
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Regularization Strength (C)</label>
+                                <input type="number" class="form-control" name="logistic_C" step="0.1" min="0.1" max="100.0" value="1.0">
+                            </div>
+                            <div>
+                                <label class="form-label small fw-bold">Penalty type</label>
+                                <select class="form-select" name="logistic_penalty">
+                                    <option value="l2">L2 Ridge (Default)</option>
+                                    <option value="l1">L1 Lasso</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Tree Params -->
+                        <div id="params-tree" class="param-block d-none">
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Max Tree Depth (0 for Infinite)</label>
+                                <input type="number" class="form-control" name="tree_max_depth" min="0" value="0">
+                            </div>
+                            <div>
+                                <label class="form-label small fw-bold">Criterion</label>
+                                <select class="form-select" name="tree_criterion">
+                                    <option value="gini">Gini impurity</option>
+                                    <option value="entropy">Entropy information gain</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Forest Params -->
+                        <div id="params-forest" class="param-block d-none">
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Estimators (Trees count)</label>
+                                <input type="number" class="form-control" name="forest_n_estimators" min="10" max="500" value="100">
+                            </div>
+                            <div>
+                                <label class="form-label small fw-bold">Max Depth (0 for Infinite)</label>
+                                <input type="number" class="form-control" name="forest_max_depth" min="0" value="0">
+                            </div>
+                        </div>
+
+                        <!-- KNN Params -->
+                        <div id="params-knn" class="param-block d-none">
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Neighbors (K count)</label>
+                                <input type="number" class="form-control" name="knn_n_neighbors" min="1" max="50" value="5">
+                            </div>
+                            <div>
+                                <label class="form-label small fw-bold">Weights metric</label>
+                                <select class="form-select" name="knn_weights">
+                                    <option value="uniform">Uniform probability</option>
+                                    <option value="distance">Inverse distance</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- SVM Params -->
+                        <div id="params-svm" class="param-block d-none">
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Regularization Strength (C)</label>
+                                <input type="number" class="form-control" name="svm_C" step="0.1" min="0.1" max="100.0" value="1.0">
+                            </div>
+                            <div>
+                                <label class="form-label small fw-bold">Kernel function</label>
+                                <select class="form-select" name="svm_kernel">
+                                    <option value="rbf">Radial Basis (RBF)</option>
+                                    <option value="linear">Linear</option>
+                                    <option value="poly">Polynomial</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Boosting & XGBoost Params -->
+                        <div id="params-boosting" class="param-block d-none">
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Iterations (Estimators count)</label>
+                                <input type="number" class="form-control" name="boosting_n_estimators" min="10" max="500" value="100">
+                            </div>
+                            <div>
+                                <label class="form-label small fw-bold">Learning rate (eta)</label>
+                                <input type="number" class="form-control" name="boosting_learning_rate" step="0.01" min="0.01" max="1.0" value="0.1">
+                            </div>
+                        </div>
+
+                        <div id="params-none" class="param-block text-muted small py-2">
+                            No parameters to configure for Naive Bayes.
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-glow w-100 py-3 font-heading">
+                        <i class="fa-solid fa-bolt me-2"></i> Train Classifier
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 2. Right Workspace Panel: Previews, Training Logs, Evaluations, Predictions -->
+        <div class="col-xl-8 col-lg-7">
+            {% if not df_exists %}
+            <div class="card glass-panel text-center py-5 px-4" data-aos="fade-left">
+                <i class="fa-solid fa-database text-primary display-3 mb-4 opacity-50"></i>
+                <h3 class="font-heading fw-bold">No Dataset Loaded</h3>
+                <p class="text-muted mx-auto" style="max-width: 500px;">Get started by selecting one of our high-quality sample datasets, or upload your own CSV file to start training and testing classification models.</p>
+                <div class="mt-2 d-flex justify-content-center gap-3">
+                    <button class="btn btn-primary-glow" onclick="document.querySelector('select[name=sample_name]').focus()">
+                        Choose Sample Data
+                    </button>
+                </div>
+            </div>
+            {% else %}
+            
+            <div class="tabs-container mb-4">
+                <ul class="nav custom-nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="data-tab" data-bs-toggle="tab" data-bs-target="#data-pane" type="button" role="tab"><i class="fa-solid fa-table me-2"></i>Dataset Statistics</button>
+                    </li>
+                    {% if model_results %}
+                    <li class="nav-item">
+                        <button class="nav-link" id="results-tab" data-bs-toggle="tab" data-bs-target="#results-pane" type="button" role="tab"><i class="fa-solid fa-square-poll-vertical me-2"></i>Metrics & Graphs</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="predict-tab" data-bs-toggle="tab" data-bs-target="#predict-pane" type="button" role="tab"><i class="fa-solid fa-calculator me-2"></i>Inference Predictor</button>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div class="tab-content">
+                <!-- Dataset Stats Pane -->
+                <div class="tab-pane fade show active" id="data-pane" role="tabpanel">
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-4">
+                            <div class="stat-card glass-panel">
+                                <div>
+                                    <small class="text-muted text-uppercase fw-bold" style="font-size: 11px;">Total Rows</small>
+                                    <h3 class="m-0 font-heading fw-bold mt-1">{{ shape[0] }}</h3>
+                                </div>
+                                <i class="fa-solid fa-arrows-up-down stat-icon"></i>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="stat-card glass-panel">
+                                <div>
+                                    <small class="text-muted text-uppercase fw-bold" style="font-size: 11px;">Total Features</small>
+                                    <h3 class="m-0 font-heading fw-bold mt-1">{{ shape[1] }}</h3>
+                                </div>
+                                <i class="fa-solid fa-arrows-left-right stat-icon" style="color: var(--secondary);"></i>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="stat-card glass-panel">
+                                <div>
+                                    <small class="text-muted text-uppercase fw-bold" style="font-size: 11px;">Null Value Cells</small>
+                                    <h3 class="m-0 font-heading fw-bold mt-1 text-{{ 'danger' if missing_sum > 0 else 'success' }}">{{ missing_sum }}</h3>
+                                </div>
+                                <i class="fa-solid fa-circle-question stat-icon" style="color: var(--accent);"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Summary -->
+                    <div class="card glass-card mb-4">
+                        <h5 class="font-heading fw-bold mb-3">Numerical Properties Summary</h5>
+                        <div class="custom-table-container">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Metric</th>
+                                        {% for col in summary.keys() %}
+                                            <th>{{ col }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in ['count', 'mean', 'std', 'min', '50%', 'max'] %}
+                                    <tr>
+                                        <td class="fw-bold">{{ stat.capitalize() }}</td>
+                                        {% for col in summary.keys() %}
+                                            <td>
+                                                {% if summary[col][stat] is number %}
+                                                    {{ "%.3f"|format(summary[col][stat]) }}
+                                                {% else %}
+                                                    {{ summary[col][stat] }}
+                                                {% endif %}
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Data Visualization Section -->
+                    {% if correlation_plot_json %}
+                    <div class="card glass-card mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="font-heading fw-bold m-0">Feature Correlation Analysis</h5>
+                                <small class="text-muted">Heatmap showing relationships between numerical features</small>
+                            </div>
+                        </div>
+                        <div class="plot-container">
+                            <div id="correlationPlot" style="height: 400px;"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Interactive Data Table (Top 10 rows) -->
+                    <div class="card glass-card mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="font-heading fw-bold m-0">Dataset Preview (First 10 Rows)</h5>
+                            <span class="badge bg-primary-light text-primary">Previewing CSV</span>
+                        </div>
+                        <div class="custom-table-container">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        {% for col in columns %}
+                                            <th>{{ col }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in preview_data %}
+                                    <tr>
+                                        {% for col in columns %}
+                                            <td>
+                                                {% if row[col] is number %}
+                                                    {{ "%.4f"|format(row[col]) if row[col] % 1 != 0 else row[col] }}
+                                                {% else %}
+                                                    {{ row[col] }}
+                                                {% endif %}
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Model Results Pane (if trained) -->
+                {% if model_results %}
+                <div class="tab-pane fade" id="results-pane" role="tabpanel">
+                    <!-- Metrics Summary Cards -->
+                    {% if model_results %}
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-md-3">
+        <div class="stat-card glass-panel" style="border-top: 4px solid var(--primary);">
+            <div>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 10px;">Accuracy</small>
+                <h4 class="m-0 font-heading fw-bold mt-1 text-primary">{{ "%.4f"|format(model_results.metrics.accuracy) if model_results.metrics.accuracy is defined else 'N/A' }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="stat-card glass-panel" style="border-top: 4px solid var(--secondary);">
+            <div>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 10px;">F1 Score</small>
+                <h4 class="m-0 font-heading fw-bold mt-1 text-secondary">{{ "%.4f"|format(model_results.metrics.f1_score) if model_results.metrics.f1_score is defined else 'N/A' }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="stat-card glass-panel" style="border-top: 4px solid var(--accent);">
+            <div>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 10px;">ROC AUC</small>
+                <h4 class="m-0 font-heading fw-bold mt-1 text-info">{{ "%.4f"|format(model_results.metrics.roc_auc) if model_results.metrics.roc_auc is defined else 'N/A' }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+        <div class="stat-card glass-panel" style="border-top: 4px solid var(--success);">
+            <div>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 10px;">Precision</small>
+                <h4 class="m-0 font-heading fw-bold mt-1 text-success">{{ "%.4f"|format(model_results.metrics.precision) if model_results.metrics.precision is defined else 'N/A' }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+                    <!-- Exporters block -->
+                    <div class="card glass-panel mb-4 p-3 d-flex flex-wrap flex-row gap-3 align-items-center justify-content-between">
+                        <div>
+                            <h6 class="m-0 font-heading fw-bold text-main">Classifier Serialized Successfully</h6>
+                            <small class="text-muted">Algorithm: {{ model_results.algorithm_name }} | Pipeline saved to saved_models/</small>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="{{ url_for('download_report', file_format='pdf', filename=model_filename) }}" class="btn btn-sm btn-primary-glow">
+                                <i class="fa-solid fa-file-pdf me-1"></i> PDF Audit
+                            </a>
+                            <a href="{{ url_for('download_report', file_format='csv', filename=model_filename) }}" class="btn btn-sm btn-accent-glow">
+                                <i class="fa-solid fa-file-csv me-1"></i> CSV Metrics
+                            </a>
+                            <a href="{{ url_for('download_model', filename=model_filename) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fa-solid fa-download me-1"></i> Download .PKL
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Plotly Plots Columns -->
+                    <div class="row g-4">
+                        <!-- Confusion Matrix -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card glass-card h-100">
+                                <div class="card-header bg-transparent border-0 pb-0">
+                                    <h6 class="font-heading fw-bold mb-1">Confusion Matrix</h6>
+                                    <small class="text-muted">Shows actual vs. predicted classifications</small>
+                                </div>
+                                <div class="plot-container p-3">
+                                    <div id="confusionMatrixPlot" style="height: 350px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ROC Curve -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card glass-card h-100">
+                                <div class="card-header bg-transparent border-0 pb-0">
+                                    <h6 class="font-heading fw-bold mb-1">ROC Curve</h6>
+                                    <small class="text-muted">Trade-off between True Positive Rate and False Positive Rate</small>
+                                </div>
+                                <div class="plot-container p-3">
+                                    <div id="rocPlot" style="height: 350px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Feature Importance -->
+                        {% if feature_importance_json %}
+                        <div class="col-12 mb-4">
+                            <div class="card glass-card">
+                                <div class="card-header bg-transparent border-0 pb-0">
+                                    <h6 class="font-heading fw-bold mb-1">Feature Importance Analysis</h6>
+                                    <small class="text-muted">Top features contributing to model predictions</small>
+                                </div>
+                                <div class="plot-container p-3">
+                                    <div id="importancePlot" style="height: 380px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Prediction Inference Pane -->
+                <div class="tab-pane fade" id="predict-pane" role="tabpanel">
+                    <div class="row g-4">
+                        <!-- Inference Form -->
+                        <div class="col-lg-6">
+                            <div class="card glass-card">
+                                <h5 class="font-heading fw-bold mb-3"><i class="fa-solid fa-calculator text-primary me-2"></i>Run Single Inference</h5>
+                                <form id="predictForm" onsubmit="runInference(event)">
+                                    <input type="hidden" name="model_filename" value="{{ model_filename }}">
+                                    
+                                    <div class="row g-3">
+                                        {% for field in features_schema %}
+                                        <div class="col-12">
+                                            <label for="input-{{ field.name }}" class="form-label small fw-bold">{{ field.name }}</label>
+                                            {% if field.type == 'categorical' %}
+                                                <select class="form-select" id="input-{{ field.name }}" name="{{ field.name }}" required>
+                                                    {% for opt in field.options %}
+                                                        <option value="{{ opt }}">{{ opt }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            {% else %}
+                                                <input type="number" step="any" class="form-control" id="input-{{ field.name }}" name="{{ field.name }}" value="{{ '%.2f'|format(field.mean) }}" required>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary-glow w-100 py-3 font-heading mt-4">
+                                        <i class="fa-solid fa-wand-magic-sparkles me-2"></i> Predict Classification Class
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <!-- Inference Display & Logs -->
+                        <div class="col-lg-6">
+                            <div class="card glass-card text-center mb-4 p-4 py-5" style="min-height: 250px;">
+                                <h6 class="text-uppercase text-muted fw-bold" style="font-size: 12px; letter-spacing: 1px;">Predicted Category</h6>
+                                <div id="predictionOutcome" class="my-4">
+                                    <span class="text-muted italic small">Enter features and click Predict to run classifier.</span>
+                                </div>
+                                <div id="confidenceBox" class="d-none">
+                                    <span id="confidencePill" class="badge bg-success-light text-success px-3 py-2 rounded-pill font-heading">Confidence: --</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Prediction History List -->
+                            <div class="card glass-panel p-3">
+                                <h6 class="font-heading fw-bold mb-3">Predictions Logs History</h6>
+                                <div class="custom-table-container" style="max-height: 200px; overflow-y: auto;">
+                                    <table class="custom-table table-sm" id="historyTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Algorithm</th>
+                                                <th>Class Prediction</th>
+                                                <th>Conf. Score</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for record in prediction_history %}
+                                            <tr>
+                                                <td class="small">{{ record.model_name }}</td>
+                                                <td class="fw-bold"><span class="badge bg-primary-light text-primary">{{ record.prediction }}</span></td>
+                                                <td class="small fw-bold">{{ "%.1f%%"|format(record.confidence * 100) if record.confidence else 'N/A' }}</td>
+                                            </tr>
+                                            {% else %}
+                                            <tr id="emptyHistoryRow">
+                                                <td colspan="3" class="text-center text-muted small py-3">No prediction logs recorded yet.</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toggle active parameter inputs based on algorithm selection
+    function toggleHyperparams(algoId) {
+        const blocks = document.querySelectorAll('.param-block');
+        blocks.forEach(b => b.classList.add('d-none'));
+        
+        const noneBlock = document.getElementById('params-none');
+        
+        if (algoId === 'logistic_regression') {
+            document.getElementById('params-logistic').classList.remove('d-none');
+        } else if (algoId === 'decision_tree_classifier') {
+            document.getElementById('params-tree').classList.remove('d-none');
+        } else if (algoId === 'random_forest_classifier') {
+            document.getElementById('params-forest').classList.remove('d-none');
+        } else if (algoId === 'knn') {
+            document.getElementById('params-knn').classList.remove('d-none');
+        } else if (algoId === 'svm') {
+            document.getElementById('params-svm').classList.remove('d-none');
+        } else if (algoId === 'gradient_boosting' || algoId === 'xgboost') {
+            document.getElementById('params-boosting').classList.remove('d-none');
+        } else {
+            if (noneBlock) noneBlock.classList.remove('d-none');
+        }
+    }
+
+    // Initialize chart rendering on page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // Render correlation plot if exists (Data Tab)
+        {% if correlation_plot_json %}
+            const correlationData = {{ correlation_plot_json | safe }};
+            const correlationEl = document.getElementById('correlationPlot');
+            if (correlationEl) {
+                Plotly.newPlot('correlationPlot', correlationData.data, correlationData.layout, {responsive: true});
+            }
+        {% endif %}
+        
+        {% if model_results %}
+            const resultsTabBtn = document.getElementById('results-tab');
+            if (resultsTabBtn) {
+                resultsTabBtn.addEventListener('shown.bs.tab', function () {
+                    // Render Plotly graphs
+                    const cmData = {{ confusion_matrix_json | safe }};
+                    const rocData = {{ roc_json | safe }};
+                    
+                    Plotly.newPlot('confusionMatrixPlot', cmData.data, cmData.layout, {responsive: true});
+                    Plotly.newPlot('rocPlot', rocData.data, rocData.layout, {responsive: true});
+                    
+                    {% if feature_importance_json %}
+                        const importanceData = {{ feature_importance_json | safe }};
+                        Plotly.newPlot('importancePlot', importanceData.data, importanceData.layout, {responsive: true});
+                    {% endif %}
+                });
+            }
+        {% endif %}
+        
+        // Setup initial parameter visible block
+        const selector = document.getElementById('algoSelector');
+        if (selector) toggleHyperparams(selector.value);
+    });
+
+    // Run Single Inference prediction
+    async function runInference(e) {
+        e.preventDefault();
+        window.showLoading("Computing model prediction inference...");
+        
+        const form = document.getElementById('predictForm');
+        const formData = new FormData(form);
+        const data = {};
+        
+        formData.forEach((value, key) => {
+            data[key] = value;
+        });
+        
+        try {
+            const response = await fetch("{{ url_for('predict_supervised') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            window.hideLoading();
+            
+            if (result.success) {
+                // Update Prediction Outcome display
+                const display = document.getElementById('predictionOutcome');
+                display.innerHTML = `
+                    <h1 class="display-4 font-heading fw-bold text-primary mb-0">${result.prediction}</h1>
+                    <span class="badge bg-primary-light text-primary px-3 py-1 mt-2">Predicted Classification Class</span>
+                `;
+                
+                const confidenceBox = document.getElementById('confidenceBox');
+                const confidencePill = document.getElementById('confidencePill');
+                
+                if (result.confidence !== null) {
+                    confidencePill.textContent = `Confidence: ${(result.confidence * 100).toFixed(1)}%`;
+                    confidenceBox.classList.remove('d-none');
+                } else {
+                    confidenceBox.classList.add('d-none');
+                }
+                
+                // Add to Prediction History Table
+                const tableBody = document.querySelector('#historyTable tbody');
+                const emptyRow = document.getElementById('emptyHistoryRow');
+                if (emptyRow) emptyRow.remove();
+                
+                const confScore = result.confidence !== null ? `${(result.confidence * 100).toFixed(1)}%` : 'N/A';
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td class="small">${result.history_record.model_name}</td>
+                    <td class="fw-bold"><span class="badge bg-primary-light text-primary">${result.prediction}</span></td>
+                    <td class="small fw-bold">${confScore}</td>
+                `;
+                tableBody.insertBefore(newRow, tableBody.firstChild);
+            } else {
+                alert("Error: " + result.error);
+            }
+        } catch (error) {
+            window.hideLoading();
+            console.error(error);
+            alert("Error computing prediction. Please review features inputs values.");
+        }
+    }
+</script>
+{% endblock %}

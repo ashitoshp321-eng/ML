@@ -1,0 +1,57 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Home - ML Testing Platform{% endblock %}
+
+{% block page_header %}Home{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5" style="background: linear-gradient(135deg, #6e8efb, #a777e3);" data-aos="fade-in">
+  <div class="row align-items-center">
+    <div class="col-lg-6 text-center text-lg-start text-white">
+      <h1 class="display-4 fw-bold mb-3">Machine Learning Testing Platform</h1>
+      <p class="lead mb-4">Explore, Train, Test, Compare and Visualize Machine Learning Algorithms</p>
+      <div class="d-grid gap-2 d-sm-inline-block">
+        <a href="{{ url_for('models_list') }}" class="btn btn-primary btn-lg me-2">Explore Models</a>
+        <a href="{{ url_for('supervised_dashboard', task_type='regression', algo_id='linear_regression') }}" class="btn btn-outline-light btn-lg">Get Started</a>
+        <a href="{{ url_for('leaderboard_view') }}" class="btn btn-success btn-lg ms-2">View Dashboard</a>
+      </div>
+    </div>
+    <div class="col-lg-6 text-center mt-4 mt-lg-0">
+      <img src="{{ url_for('static', filename='images/hero_ml.svg') }}" alt="Machine Learning illustration" class="img-fluid" style="max-height: 300px;">
+    </div>
+  </div>
+</div>
+
+<div class="container my-5" data-aos="fade-up">
+  <div class="row g-4">
+    <div class="col-md-3">
+      <div class="stat-card glass-panel text-center p-4">
+        <i class="fa-solid fa-upload fa-2x text-primary mb-2"></i>
+        <h5 class="fw-bold">Data Upload</h5>
+        <p class="text-muted small">Import CSV files or use built‑in sample datasets.</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card glass-panel text-center p-4">
+        <i class="fa-solid fa-chart-bar fa-2x text-success mb-2"></i>
+        <h5 class="fw-bold">Data Visualization</h5>
+        <p class="text-muted small">Explore distributions, correlations and missing values.</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card glass-panel text-center p-4">
+        <i class="fa-solid fa-rocket fa-2x text-warning mb-2"></i>
+        <h5 class="fw-bold">Model Training</h5>
+        <p class="text-muted small">Run regression or classification pipelines with one click.</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card glass-panel text-center p-4">
+        <i class="fa-solid fa-chart-pie fa-2x text-info mb-2"></i>
+        <h5 class="fw-bold">Performance Metrics</h5>
+        <p class="text-muted small">See accuracy, R², confusion matrix and interactive plots.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

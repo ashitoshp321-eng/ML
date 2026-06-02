@@ -1,0 +1,251 @@
+{
+    "users": {
+        "c22b9770-422a-41ca-996b-48660fffde07": {
+            "fullname": "Verification Test",
+            "email": "test@mlplatform.dev",
+            "username": "testverifier",
+            "password_hash": "mock_hash",
+            "created_at": "2026-06-01T12:00:00"
+        },
+        "061f1fd8-93d3-4e68-a42f-ce3f2102b23a": {
+            "fullname": "Verification Test",
+            "email": "test@mlplatform.dev",
+            "username": "testverifier",
+            "password_hash": "mock_hash",
+            "created_at": "2026-06-01T12:00:00"
+        },
+        "679c33d9-4e5d-48c0-a700-1a425b84e8f9": {
+            "fullname": "ashu",
+            "email": "rockypawar474@gmail.com",
+            "username": "2023BTAIM053",
+            "password_hash": "scrypt:32768:8:1$5z71Q4NkBsHETI3m$60f531a8310b96082b2fe9dc097eb50c6f6f5c929ca9243e8324a4ce8a86a3bfeb6e16139ee25ebb18fa26a97b847c9ceebfa2a309bf2c9e82df675b1147530a",
+            "created_at": 1780297654.367934
+        }
+    },
+    "predictions": {
+        "d70c4e21-0d78-4f91-a1f9-08c996dcf078": {
+            "username": "testverifier",
+            "model_name": "Decision Tree Classifier",
+            "dataset_name": "iris_flower.csv",
+            "inputs": {
+                "SepalLength": 5.1,
+                "SepalWidth": 3.5,
+                "PetalLength": 1.4,
+                "PetalWidth": 0.2
+            },
+            "prediction": "setosa",
+            "confidence": 1.0,
+            "created_at": "2026-06-01T12:31:11.010586"
+        },
+        "7df11787-06a7-4b4c-8789-665066c4ee44": {
+            "username": "testverifier",
+            "model_name": "Decision Tree Classifier",
+            "dataset_name": "iris_flower.csv",
+            "inputs": {
+                "SepalLength": 5.1,
+                "SepalWidth": 3.5,
+                "PetalLength": 1.4,
+                "PetalWidth": 0.2
+            },
+            "prediction": "setosa",
+            "confidence": 1.0,
+            "created_at": "2026-06-01T12:31:32.638048"
+        },
+        "65aac760-b045-4501-b494-663d757f0e4f": {
+            "username": "testverifier",
+            "model_name": "Decision Tree Classifier",
+            "dataset_name": "iris_flower.csv",
+            "inputs": {
+                "SepalLength": 5.1,
+                "SepalWidth": 3.5,
+                "PetalLength": 1.4,
+                "PetalWidth": 0.2
+            },
+            "prediction": "setosa",
+            "confidence": 1.0,
+            "created_at": "2026-06-01T12:32:20.961798"
+        },
+        "fceb1335-3274-4c26-b4b4-c571794c0f3d": {
+            "username": "2023BTAIM053",
+            "model_name": "Linear Regression",
+            "dataset_name": "sales_dataset.csv",
+            "inputs": {
+                "Month": "Apr",
+                "Product": "Headphones",
+                "Sales": "60848.96"
+            },
+            "prediction": "17769.16585811691",
+            "confidence": null,
+            "created_at": "2026-06-01T16:23:40.051802"
+        }
+    },
+    "saved_models": {
+        "f9eb869e-8936-4bb7-a758-97b6aeea6e9d": {
+            "username": "2023BTAIM053",
+            "model_name": "linear_regression_sales_dataset_1780297805.pkl",
+            "algorithm_name": "Linear Regression",
+            "dataset_name": "sales_dataset.csv",
+            "task_type": "regression",
+            "metrics_json": {
+                "adjusted_r2": 0.14245066324852107,
+                "mae": 4482.007964151853,
+                "mse": 30260499.16166367,
+                "r2": 0.14245066324852107,
+                "rmse": 5500.954386437291
+            },
+            "filepath": "C:\\Users\\HP\\OneDrive\\Desktop\\ML\\saved_models\\linear_regression_sales_dataset_1780297805.pkl",
+            "features_json": [
+                "Sales",
+                "Month_Apr",
+                "Month_Aug",
+                "Month_Dec",
+                "Month_Feb",
+                "Month_Jan",
+                "Month_Jul",
+                "Month_Jun",
+                "Month_Mar",
+                "Month_May",
+                "Month_Nov",
+                "Month_Oct",
+                "Month_Sep",
+                "Product_Headphones",
+                "Product_Laptop",
+                "Product_Mobile",
+                "Product_Tablet"
+            ],
+            "target_column": "Profit",
+            "created_at": 1780297805.8699267
+        },
+        "c8340c23-cef7-4ec4-be3a-aabcccc53123": {
+            "username": "2023BTAIM053",
+            "model_name": "linear_regression_sales_dataset_1780302919.pkl",
+            "algorithm_name": "Linear Regression",
+            "dataset_name": "sales_dataset.csv",
+            "task_type": "regression",
+            "metrics_json": {
+                "adjusted_r2": 0.24203071041282287,
+                "mae": 4335.465247310008,
+                "mse": 29337213.97366036,
+                "r2": 0.24203071041282287,
+                "rmse": 5416.383846595472
+            },
+            "filepath": "C:\\Users\\HP\\OneDrive\\Desktop\\ML\\saved_models\\linear_regression_sales_dataset_1780302919.pkl",
+            "features_json": [
+                "Sales",
+                "Month_Apr",
+                "Month_Aug",
+                "Month_Dec",
+                "Month_Feb",
+                "Month_Jan",
+                "Month_Jul",
+                "Month_Jun",
+                "Month_Mar",
+                "Month_May",
+                "Month_Nov",
+                "Month_Oct",
+                "Month_Sep",
+                "Product_Headphones",
+                "Product_Laptop",
+                "Product_Mobile",
+                "Product_Tablet"
+            ],
+            "target_column": "Profit",
+            "created_at": 1780302919.3113508
+        },
+        "2f766900-9886-4529-af7e-23e4311d4eb1": {
+            "username": "2023BTAIM053",
+            "model_name": "linear_regression_sales_dataset_1780311017.pkl",
+            "algorithm_name": "Linear Regression",
+            "dataset_name": "sales_dataset.csv",
+            "task_type": "regression",
+            "metrics_json": {
+                "adjusted_r2": 0.24203071041282287,
+                "mae": 4335.465247310008,
+                "mse": 29337213.97366036,
+                "r2": 0.24203071041282287,
+                "rmse": 5416.383846595472
+            },
+            "filepath": "C:\\Users\\HP\\OneDrive\\Desktop\\ML\\saved_models\\linear_regression_sales_dataset_1780311017.pkl",
+            "features_json": [
+                "Sales",
+                "Month_Apr",
+                "Month_Aug",
+                "Month_Dec",
+                "Month_Feb",
+                "Month_Jan",
+                "Month_Jul",
+                "Month_Jun",
+                "Month_Mar",
+                "Month_May",
+                "Month_Nov",
+                "Month_Oct",
+                "Month_Sep",
+                "Product_Headphones",
+                "Product_Laptop",
+                "Product_Mobile",
+                "Product_Tablet"
+            ],
+            "target_column": "Profit",
+            "created_at": 1780311017.2620375
+        },
+        "2a2db5ae-e580-4dc9-8869-ac70216720ab": {
+            "username": "2023BTAIM053",
+            "model_name": "multiple_linear_regression_iris_flower_1780312447.pkl",
+            "algorithm_name": "Multiple Linear Regression",
+            "dataset_name": "iris_flower.csv",
+            "task_type": "regression",
+            "metrics_json": {
+                "adjusted_r2": 0.8317390114478731,
+                "mae": 0.2276579155504906,
+                "mse": 0.09211496169144971,
+                "r2": 0.8665516297690028,
+                "rmse": 0.30350446733359576
+            },
+            "filepath": "C:\\Users\\HP\\OneDrive\\Desktop\\ML\\saved_models\\multiple_linear_regression_iris_flower_1780312447.pkl",
+            "features_json": [
+                "SepalWidth",
+                "PetalLength",
+                "PetalWidth",
+                "Species_setosa",
+                "Species_versicolor",
+                "Species_virginica"
+            ],
+            "target_column": "SepalLength",
+            "created_at": 1780312447.242448
+        }
+    },
+    "leaderboard": {
+        "aa6ba237-ba63-4255-b042-0a667f946bc8": {
+            "username": "2023BTAIM053",
+            "algorithm_name": "Linear Regression",
+            "dataset_name": "sales_dataset.csv",
+            "metric_name": "R2",
+            "metric_value": 0.14245066324852107,
+            "created_at": 1780297805.8768504
+        },
+        "31361c03-a327-4c76-9504-1ecbc9446d29": {
+            "username": "2023BTAIM053",
+            "algorithm_name": "Linear Regression",
+            "dataset_name": "sales_dataset.csv",
+            "metric_name": "R2",
+            "metric_value": 0.24203071041282287,
+            "created_at": 1780302919.3224947
+        },
+        "11b57437-9cc1-4826-90c7-e0443a48bba7": {
+            "username": "2023BTAIM053",
+            "algorithm_name": "Linear Regression",
+            "dataset_name": "sales_dataset.csv",
+            "metric_name": "R2",
+            "metric_value": 0.24203071041282287,
+            "created_at": 1780311017.280305
+        },
+        "178826da-44a5-4a23-8014-453d47da22ef": {
+            "username": "2023BTAIM053",
+            "algorithm_name": "Multiple Linear Regression",
+            "dataset_name": "iris_flower.csv",
+            "metric_name": "R2",
+            "metric_value": 0.8665516297690028,
+            "created_at": 1780312447.2973444
+        }
+    }
+}

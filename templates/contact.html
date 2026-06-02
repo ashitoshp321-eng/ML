@@ -1,0 +1,135 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Contact Support - ML Testing Platform{% endblock %}
+{% block page_header %}Contact & Support{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row g-4">
+        <!-- 1. Left: Contact Form -->
+        <div class="col-lg-6" data-aos="fade-right">
+            <div class="card glass-card h-100">
+                <h3 class="font-heading fw-bold mb-2">Get in Touch</h3>
+                <p class="text-muted small mb-4">Have questions about algorithm integrations, database backups, or custom reports? Send us a message.</p>
+                
+                <form action="{{ url_for('contact_submit') }}" method="POST" class="needs-validation" novalidate>
+                    <div class="mb-3">
+                        <label for="contact-name" class="form-label small fw-bold">Full Name</label>
+                        <input type="text" class="form-control" id="contact-name" name="name" placeholder="John Doe" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="contact-email" class="form-label small fw-bold">Email Address</label>
+                        <input type="email" class="form-control" id="contact-email" name="email" placeholder="john@example.com" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="contact-subject" class="form-label small fw-bold">Subject</label>
+                        <input type="text" class="form-control" id="contact-subject" name="subject" placeholder="Algorithm Query" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="contact-message" class="form-label small fw-bold">Message</label>
+                        <textarea class="form-control" id="contact-message" name="message" rows="4" placeholder="Your message..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-glow w-100 py-2.5 font-heading">
+                        <i class="fa-solid fa-paper-plane me-2"></i> Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 2. Right: Contact Info & Map -->
+        <div class="col-lg-6" data-aos="fade-left">
+            <div class="card glass-card mb-4">
+                <h5 class="font-heading fw-bold mb-3">Contact Information</h5>
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-envelope text-primary fs-5 width-25"></i>
+                        <div>
+                            <span class="text-muted small d-block">Support Desk</span>
+                            <strong class="text-main">ashitosh321@gmail.com</strong>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-phone text-secondary fs-5 width-25"></i>
+                        <div>
+                            <span class="text-muted small d-block">Phone Support</span>
+                            <strong class="text-main">+91 9256888353</strong>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fa-solid fa-location-dot text-accent fs-5 width-25"></i>
+                        <div>
+                            <span class="text-muted small d-block">Headquarters</span>
+                            <strong class="text-main">Nims University,Jaipur,RJ</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Embedded Google Map -->
+            <div class="card glass-panel overflow-hidden p-0" style="height: 250px;">
+                <iframe 
+                    title="Office Location Map"
+                    src="
+                    width="100%" 
+                    height="100%" 
+                    style="border:0;" 
+                    allowfullscreen="" 
+                    loading="lazy">
+                </iframe>
+            </div>
+        </div>
+
+        <!-- 3. Bottom: FAQ Section -->
+        <div class="col-12" data-aos="fade-up">
+            <div class="card glass-card">
+                <h4 class="font-heading fw-bold mb-4 text-center">Frequently Asked Questions</h4>
+                
+                <div class="accordion accordion-flush" id="faqAccordion">
+                    <div class="accordion-item bg-transparent">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-transparent font-heading fw-bold text-main" type="button" data-bs-toggle="collapse" data-bs-target="#faq-1">
+                                How do I connect the platform to my real Firebase database?
+                            </button>
+                        </h2>
+                        <div id="faq-1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted small">
+                                Head to the Firebase Console, navigate to Project Settings -> Service Accounts, select Python, and generate a new private key. Download this JSON file, rename it to <code>firebase-credentials.json</code>, and place it directly in the root directory of this project. The database layer will automatically detect it and transition from local JSON simulation to live Cloud Firestore.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item bg-transparent">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-transparent font-heading fw-bold text-main" type="button" data-bs-toggle="collapse" data-bs-target="#faq-2">
+                                What formats of datasets are supported for upload?
+                            </button>
+                        </h2>
+                        <div id="faq-2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted small">
+                                The platform currently supports standard comma-separated value (CSV) files. Make sure the file has headers in the first row. Categorical feature columns are automatically converted using One-Hot encoding, and numerical values can be scaled.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item bg-transparent">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-transparent font-heading fw-bold text-main" type="button" data-bs-toggle="collapse" data-bs-target="#faq-3">
+                                Where are the trained models and generated reports saved?
+                            </button>
+                        </h2>
+                        <div id="faq-3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body text-muted small">
+                                Serialized estimators are saved as <code>.pkl</code> binary files in the <code>saved_models/</code> folder. Generated CSV metric charts and ReportLab PDF audits are written to the <code>reports/</code> folder. You can download these directly from the training results panel.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

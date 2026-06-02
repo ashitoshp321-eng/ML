@@ -1,0 +1,252 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Dimensionality Reduction Studio - ML Testing Platform{% endblock %}
+{% block page_header %}PCA & t-SNE Compression Studio{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row g-4">
+        <!-- Control Panel -->
+        <div class="col-xl-4 col-lg-5">
+            <!-- Data Upload -->
+            <div class="card glass-card mb-4" data-aos="fade-right">
+                <h5 class="font-heading fw-bold mb-3"><i class="fa-solid fa-file-arrow-up text-primary me-2"></i>1. Data Source</h5>
+                <form action="{{ url_for('upload_dataset', dashboard_type='dimensionality') }}" method="POST" enctype="multipart/form-data" class="trigger-loading-form" data-loading-msg="Uploading & Analyzing Data...">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Select Sample Dataset</label>
+                        <select class="form-select font-heading" name="sample_name" onchange="this.form.submit()">
+                            <option value="">-- Choose Sample CSV --</option>
+                            {% for sample in samples %}
+                                <option value="{{ sample }}" {% if active_dataset == sample %}selected{% endif %}>{{ sample.replace('_', ' ').replace('.csv', '').title() }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="text-center my-2 text-muted small fw-bold">— OR —</div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Upload Custom CSV</label>
+                        <input class="form-control" type="file" name="file" accept=".csv" onchange="if(this.value) this.form.submit()">
+                    </div>
+                </form>
+            </div>
+
+            {% if df_exists %}
+            <!-- Configuration Options -->
+            <div class="card glass-card mb-4" data-aos="fade-right" data-aos-delay="100">
+                <form id="reductionForm" action="{{ url_for('train_dimensionality') }}" method="POST" class="trigger-loading-form" data-loading-msg="Running Dimensionality Reduction...">
+                    <input type="hidden" name="dataset_name" value="{{ active_dataset }}">
+                    
+                    <h5 class="font-heading fw-bold mb-3"><i class="fa-solid fa-sliders text-secondary me-2"></i>2. Feature Selection</h5>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Select Features to Project (Numeric)</label>
+                        <div class="p-3 rounded glass-panel" style="max-height: 150px; overflow-y: auto;">
+                            {% for col in numeric_columns %}
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" name="reduction_features" value="{{ col }}" id="feat-{{ col }}" checked>
+                                <label class="form-check-label small" for="feat-{{ col }}">{{ col }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">Requires numerical variables. Categorical variables are ignored.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="colorColumn" class="form-label small fw-bold">Color-Code Labels By (Optional)</label>
+                        <select class="form-select" id="colorColumn" name="color_column">
+                            <option value="">-- No Labels (Single Color) --</option>
+                            {% for col in columns %}
+                                <option value="{{ col }}">{{ col }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <hr class="my-3" style="border-color: var(--border-color);">
+
+                    <h5 class="font-heading fw-bold mb-3"><i class="fa-solid fa-compress text-accent me-2"></i>3. Projection Settings</h5>
+                    
+                    <div class="mb-3">
+                        <label for="algoSelector" class="form-label small fw-bold">Projection Method</label>
+                        <select class="form-select font-heading" id="algoSelector" name="algorithm" onchange="toggleReductionParams(this.value)">
+                            <option value="pca">Principal Component Analysis (PCA)</option>
+                            <option value="tsne">t-Distributed Stochastic Neighbor Embedding (t-SNE)</option>
+                        </select>
+                    </div>
+
+                    <div id="reduction-params-panel" class="mb-4 p-3 rounded glass-panel">
+                        <!-- PCA params -->
+                        <div id="params-pca" class="reduction-param-block">
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Number of Principal Components</label>
+                                <select class="form-select" name="pca_components">
+                                    <option value="3" selected>3 Components (Generates 2D & 3D plots)</option>
+                                    <option value="2">2 Components (Generates 2D plot)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- t-SNE Params -->
+                        <div id="params-tsne" class="reduction-param-block d-none">
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Perplexity (Nearest Neighbors weight)</label>
+                                <input type="number" class="form-control" name="tsne_perplexity" min="5" max="50" value="30">
+                            </div>
+                            <div>
+                                <label class="form-label small fw-bold">Learning Rate (eta)</label>
+                                <input type="number" class="form-control" name="tsne_lr" min="10" max="1000" step="50" value="200">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-glow w-100 py-3 font-heading">
+                        <i class="fa-solid fa-play me-2"></i> Project Dataset Space
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Output Worksheets -->
+        <div class="col-xl-8 col-lg-7">
+            {% if not df_exists %}
+            <div class="card glass-panel text-center py-5 px-4" data-aos="fade-left">
+                <i class="fa-solid fa-compress text-primary display-3 mb-4 opacity-50"></i>
+                <h3 class="font-heading fw-bold">No Dataset Loaded</h3>
+                <p class="text-muted mx-auto" style="max-width: 500px;">Load one of our multidimensional sample datasets, or upload custom data to project complex metrics onto high-contrast 2D/3D spaces.</p>
+                <button class="btn btn-primary-glow mt-2 align-self-center" onclick="document.querySelector('select[name=sample_name]').focus()">
+                    Choose Sample Data
+                </button>
+            </div>
+            {% else %}
+            
+            <div class="tabs-container mb-4">
+                <ul class="nav custom-nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="data-tab" data-bs-toggle="tab" data-bs-target="#data-pane" type="button" role="tab"><i class="fa-solid fa-table-list me-2"></i>Data Preview</button>
+                    </li>
+                    {% if results %}
+                    <li class="nav-item">
+                        <button class="nav-link" id="project-tab" data-bs-toggle="tab" data-bs-target="#project-pane" type="button" role="tab"><i class="fa-solid fa-image me-2"></i>Decomposed Projections</button>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div class="tab-content">
+                <!-- Preview -->
+                <div class="tab-pane fade show active" id="data-pane" role="tabpanel">
+                    <div class="card glass-card mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="font-heading fw-bold m-0">Dataset Description</h5>
+                            <span class="badge bg-primary-light text-primary">Shape: {{ shape[0] }} x {{ shape[1] }}</span>
+                        </div>
+                        <div class="custom-table-container">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        {% for col in columns %}
+                                            <th>{{ col }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in preview_data %}
+                                    <tr>
+                                        {% for col in columns %}
+                                            <td>{{ row[col] }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projections results -->
+                {% if results %}
+                <div class="tab-pane fade" id="project-pane" role="tabpanel">
+                    <!-- Plotly 2D Scatter -->
+                    <div class="card glass-card mb-4">
+                        <div class="card-header bg-transparent border-0 pb-0 mb-3">
+                            <h6 class="font-heading fw-bold mb-1">2D Component Space Projection</h6>
+                            <small class="text-muted">Data projected onto first two principal components</small>
+                        </div>
+                        <div class="plot-container">
+                            <div id="plot2d" style="height: 380px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- 3D projection (PCA only if 3 components chosen) -->
+                    {% if plot3d_json %}
+                    <div class="card glass-card mb-4">
+                        <div class="card-header bg-transparent border-0 pb-0 mb-3">
+                            <h6 class="font-heading fw-bold mb-1">3D Interactive Component Space</h6>
+                            <small class="text-muted">Rotate and explore data in three dimensions. Click & drag to interact.</small>
+                        </div>
+                        <div class="plot-container">
+                            <div id="plot3d" style="height: 480px;"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- PCA specific explained variance -->
+                    {% if variance_json %}
+                    <div class="card glass-card mb-4">
+                        <div class="card-header bg-transparent border-0 pb-0 mb-3">
+                            <h6 class="font-heading fw-bold mb-1">Explained Variance Analysis</h6>
+                            <small class="text-muted">Cumulative variance retained by each principal component</small>
+                        </div>
+                        <div class="plot-container">
+                            <div id="variancePlot" style="height: 350px;"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleReductionParams(algo) {
+        const blocks = document.querySelectorAll('.reduction-param-block');
+        blocks.forEach(b => b.classList.add('d-none'));
+
+        if (algo === 'pca') {
+            document.getElementById('params-pca').classList.remove('d-none');
+        } else if (algo === 'tsne') {
+            document.getElementById('params-tsne').classList.remove('d-none');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if results %}
+            const projectTabBtn = document.getElementById('project-tab');
+            if (projectTabBtn) {
+                projectTabBtn.addEventListener('shown.bs.tab', function () {
+                    const plot2dData = {{ plot2d_json | safe }};
+                    Plotly.newPlot('plot2d', plot2dData.data, plot2dData.layout, {responsive: true});
+                    
+                    {% if plot3d_json %}
+                        const plot3dData = {{ plot3d_json | safe }};
+                        Plotly.newPlot('plot3d', plot3dData.data, plot3dData.layout, {responsive: true});
+                    {% endif %}
+                    
+                    {% if variance_json %}
+                        const varianceData = {{ variance_json | safe }};
+                        Plotly.newPlot('variancePlot', varianceData.data, varianceData.layout, {responsive: true});
+                    {% endif %}
+                });
+            }
+        {% endif %}
+
+        const selector = document.getElementById('algoSelector');
+        if (selector) toggleReductionParams(selector.value);
+    });
+</script>
+{% endblock %}

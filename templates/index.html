@@ -1,0 +1,166 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}ML Testing Platform - Explore and Compare Algorithms{% endblock %}
+{% block page_header %}Home Dashboard{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section rounded-4 mb-5 p-4 p-sm-5 text-center text-md-start" data-aos="fade-up">
+    <!-- Floating background decorative shapes -->
+    <div class="hero-shapes">
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="floating-shape shape-3"></div>
+    </div>
+    
+    <div class="container-fluid hero-content">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <h1 class="hero-title font-heading">Machine Learning<br>Testing Platform</h1>
+                <p class="hero-subtitle">
+                    An enterprise-level, glassmorphic sandbox environment to explore, train, test, compare, and visualize modern Machine Learning algorithms.
+                </p>
+                <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-md-start">
+                    <a href="{{ url_for('models_list') }}" class="btn btn-primary-glow px-4 py-2.5 font-heading">
+                        <i class="fa-solid fa-cubes me-2"></i> Explore Models
+                    </a>
+                    <a href="{{ url_for('automl_recommend') }}" class="btn btn-accent-glow px-4 py-2.5 font-heading">
+                        <i class="fa-solid fa-wand-magic-sparkles me-2"></i> AutoML Advisor
+                    </a>
+                    <a href="{{ url_for('leaderboard_view') }}" class="btn btn-outline-secondary px-4 py-2.5 font-heading border-2">
+                        <i class="fa-solid fa-trophy me-2"></i> View Leaderboard
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-lg-5 d-none d-lg-block text-center" data-aos="zoom-in" data-aos-delay="200">
+                <!-- Visual ML Illustration using FontAwesome icons layered together -->
+                <div class="d-inline-flex flex-column align-items-center justify-content-center bg-white bg-opacity-10 border border-white border-opacity-20 rounded-5 p-5 shadow" style="backdrop-filter: blur(20px); width: 350px; height: 350px;">
+                    <div class="d-flex gap-4 mb-4">
+                        <i class="fa-solid fa-circle-nodes text-primary display-4 animate-float" style="animation: float 4s infinite ease-in-out;"></i>
+                        <i class="fa-solid fa-chart-line text-secondary display-4 animate-float" style="animation: float 4s infinite ease-in-out 1s;"></i>
+                    </div>
+                    <div class="d-flex gap-4">
+                        <i class="fa-solid fa-brain text-accent display-1 animate-float" style="animation: float 4s infinite ease-in-out 0.5s;"></i>
+                    </div>
+                    <div class="d-flex gap-4 mt-4">
+                        <i class="fa-solid fa-shapes text-success display-4 animate-float" style="animation: float 4s infinite ease-in-out 1.5s;"></i>
+                        <i class="fa-solid fa-wand-magic-sparkles text-warning display-4 animate-float" style="animation: float 4s infinite ease-in-out 2s;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Grid -->
+<section class="mb-5">
+    <div class="text-center mb-5" data-aos="fade-up">
+        <h5 class="text-primary text-uppercase font-heading fw-bold small" style="letter-spacing: 2px;">End-to-End Pipeline</h5>
+        <h2 class="font-heading fw-bold">Platform Capabilities</h2>
+        <p class="text-muted mx-auto" style="max-width: 600px;">Build, train, and test models within minutes with our modular enterprise tools.</p>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Feature 1 -->
+        <div class="col-md-6 col-xl-4" data-aos="fade-up" data-aos-delay="50">
+            <div class="card glass-card feature-card">
+                <div class="feature-icon-wrapper feature-icon-1">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <h5 class="font-heading fw-bold">1. CSV Data Upload</h5>
+                <p class="text-muted small mb-0">Upload custom tabular CSV files, or select from pre-installed reference datasets (Iris, Boston, Mall Customers) to begin operations instantly.</p>
+            </div>
+        </div>
+        
+        <!-- Feature 2 -->
+        <div class="col-md-6 col-xl-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="card glass-card feature-card">
+                <div class="feature-icon-wrapper feature-icon-2">
+                    <i class="fa-solid fa-sliders"></i>
+                </div>
+                <h5 class="font-heading fw-bold">2. Data Preprocessing</h5>
+                <p class="text-muted small mb-0">Handle nulls with mean/median strategies, encode categories automatically, scale values, and execute train/test divisions dynamically.</p>
+            </div>
+        </div>
+        
+        <!-- Feature 3 -->
+        <div class="col-md-6 col-xl-4" data-aos="fade-up" data-aos-delay="150">
+            <div class="card glass-card feature-card">
+                <div class="feature-icon-wrapper feature-icon-3">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <h5 class="font-heading fw-bold">3. Model Training Suite</h5>
+                <p class="text-muted small mb-0">Train 15+ different algorithms covering regression and classification. Tune hyperparameters on-the-fly and save models as .pkl files.</p>
+            </div>
+        </div>
+        
+        <!-- Feature 4 -->
+        <div class="col-md-6 col-xl-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="card glass-card feature-card">
+                <div class="feature-icon-wrapper feature-icon-4">
+                    <i class="fa-solid fa-square-poll-vertical"></i>
+                </div>
+                <h5 class="font-heading fw-bold">4. Model Evaluation</h5>
+                <p class="text-muted small mb-0">Obtain MAE, RMSE, R² coefficients for regression; or precision, recall, F1, accuracy, and ROC curves for classifiers in clean layouts.</p>
+            </div>
+        </div>
+        
+        <!-- Feature 5 -->
+        <div class="col-md-6 col-xl-4" data-aos="fade-up" data-aos-delay="250">
+            <div class="card glass-card feature-card">
+                <div class="feature-icon-wrapper feature-icon-5">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <h5 class="font-heading fw-bold">5. AutoML Recommendations</h5>
+                <p class="text-muted small mb-0">Let our heuristics parser analyze your dataset details and target properties to suggest optimal pipeline methods.</p>
+            </div>
+        </div>
+        
+        <!-- Feature 6 -->
+        <div class="col-md-6 col-xl-4" data-aos="fade-up" data-aos-delay="300">
+            <div class="card glass-card feature-card">
+                <div class="feature-icon-wrapper feature-icon-6">
+                    <i class="fa-solid fa-microchip"></i>
+                </div>
+                <h5 class="font-heading fw-bold">6. Real-Time Predictions</h5>
+                <p class="text-muted small mb-0">Perform single row inferences with automated feature forms. Track execution logs, inspect probabilities, and write PDF audits.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats counters section -->
+<section class="mb-5 py-5 rounded-4 glass-panel text-center position-relative overflow-hidden" data-aos="fade-up">
+    <div class="row g-4">
+        <div class="col-6 col-md-3">
+            <div class="p-3">
+                <i class="fa-solid fa-cubes text-primary fs-3 mb-2"></i>
+                <h2 class="font-heading fw-bold" style="color: var(--primary);">15+</h2>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 11px;">Models Available</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="p-3">
+                <i class="fa-solid fa-database text-secondary fs-3 mb-2"></i>
+                <h2 class="font-heading fw-bold" style="color: var(--secondary);">100%</h2>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 11px;">Tabular CSV Support</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="p-3">
+                <i class="fa-solid fa-file-pdf text-accent fs-3 mb-2"></i>
+                <h2 class="font-heading fw-bold" style="color: var(--accent);">PDF / CSV</h2>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 11px;">Reports Generated</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="p-3">
+                <i class="fa-solid fa-shield-halved text-success fs-3 mb-2"></i>
+                <h2 class="font-heading fw-bold" style="color: var(--success);">Encrypted</h2>
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 11px;">User Sandbox DB</small>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

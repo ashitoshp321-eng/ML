@@ -1,0 +1,291 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Clustering Studio - ML Testing Platform{% endblock %}
+{% block page_header %}Unsupervised Clustering Studio{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row g-4">
+        <!-- Control Panel -->
+        <div class="col-xl-4 col-lg-5">
+            <!-- Data Upload -->
+            <div class="card glass-card mb-4" data-aos="fade-right">
+                <h5 class="font-heading fw-bold mb-3"><i class="fa-solid fa-file-arrow-up text-primary me-2"></i>1. Data Source</h5>
+                <form action="{{ url_for('upload_dataset', dashboard_type='clustering') }}" method="POST" enctype="multipart/form-data" class="trigger-loading-form" data-loading-msg="Uploading & Analyzing Data...">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Select Sample Dataset</label>
+                        <select class="form-select font-heading" name="sample_name" onchange="this.form.submit()">
+                            <option value="">-- Choose Sample CSV --</option>
+                            {% for sample in samples %}
+                                <option value="{{ sample }}" {% if active_dataset == sample %}selected{% endif %}>{{ sample.replace('_', ' ').replace('.csv', '').title() }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="text-center my-2 text-muted small fw-bold">— OR —</div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Upload Custom CSV</label>
+                        <input class="form-control" type="file" name="file" accept=".csv" onchange="if(this.value) this.form.submit()">
+                    </div>
+                </form>
+            </div>
+
+            {% if df_exists %}
+            <!-- Configurations Form -->
+            <div class="card glass-card mb-4" data-aos="fade-right" data-aos-delay="100">
+                <form id="clusteringForm" action="{{ url_for('train_clustering') }}" method="POST" class="trigger-loading-form" data-loading-msg="Fitting Clustering Models...">
+                    <input type="hidden" name="dataset_name" value="{{ active_dataset }}">
+                    
+                    <h5 class="font-heading fw-bold mb-3"><i class="fa-solid fa-sliders text-secondary me-2"></i>2. Feature Selection</h5>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Select Columns to Cluster (Numeric)</label>
+                        <div class="p-3 rounded glass-panel" style="max-height: 150px; overflow-y: auto;">
+                            {% for col in numeric_columns %}
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" name="cluster_features" value="{{ col }}" id="feat-{{ col }}" checked>
+                                <label class="form-check-label small" for="feat-{{ col }}">{{ col }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">Select at least 2 columns. Categorical items will be skipped.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="imputeStrategy" class="form-label small fw-bold">Missing Values Strategy</label>
+                        <select class="form-select" id="imputeStrategy" name="impute_strategy">
+                            <option value="median">Median</option>
+                            <option value="mean">Mean</option>
+                        </select>
+                    </div>
+
+                    <hr class="my-3" style="border-color: var(--border-color);">
+
+                    <h5 class="font-heading fw-bold mb-3"><i class="fa-solid fa-shapes text-accent me-2"></i>3. Algorithm Parameters</h5>
+                    
+                    <div class="mb-3">
+                        <label for="algoSelector" class="form-label small fw-bold">Algorithm</label>
+                        <select class="form-select font-heading" id="algoSelector" name="algorithm" onchange="toggleClusteringParams(this.value)">
+                            <option value="kmeans">K-Means Clustering</option>
+                            <option value="hierarchical">Hierarchical (Agglomerative)</option>
+                            <option value="dbscan">DBSCAN Clustering</option>
+                        </select>
+                    </div>
+
+                    <div id="clustering-params-panel" class="mb-4 p-3 rounded glass-panel">
+                        <!-- KMeans params -->
+                        <div id="params-kmeans" class="clust-param-block">
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label class="form-label small fw-bold">Number of Clusters (K)</label>
+                                    <span id="kLabel" class="badge bg-primary-light text-primary">5</span>
+                                </div>
+                                <input type="range" class="form-range" min="2" max="15" value="5" id="kmeans_k" name="kmeans_k" oninput="document.getElementById('kLabel').textContent = this.value">
+                            </div>
+                        </div>
+
+                        <!-- Hierarchical Params -->
+                        <div id="params-hierarchical" class="clust-param-block d-none">
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label class="form-label small fw-bold">Number of Clusters (K)</label>
+                                    <span id="hierarchicalLabel" class="badge bg-secondary-light text-secondary">5</span>
+                                </div>
+                                <input type="range" class="form-range" min="2" max="15" value="5" id="hierarchical_k" name="hierarchical_k" oninput="document.getElementById('hierarchicalLabel').textContent = this.value">
+                            </div>
+                            <div>
+                                <label class="form-label small fw-bold">Linkage criterion</label>
+                                <select class="form-select" name="linkage">
+                                    <option value="ward">Ward minimization</option>
+                                    <option value="complete">Complete link</option>
+                                    <option value="average">Average link</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- DBSCAN Params -->
+                        <div id="params-dbscan" class="clust-param-block d-none">
+                            <div class="mb-2">
+                                <label class="form-label small fw-bold">Epsilon (Radius size)</label>
+                                <input type="number" class="form-control" name="dbscan_eps" step="0.1" min="0.1" max="100.0" value="3.0">
+                            </div>
+                            <div>
+                                <label class="form-label small fw-bold">Min Core Samples</label>
+                                <input type="number" class="form-control" name="dbscan_min_samples" min="1" value="5">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-glow w-100 py-3 font-heading">
+                        <i class="fa-solid fa-play me-2"></i> Run Clustering
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Output Panel -->
+        <div class="col-xl-8 col-lg-7">
+            {% if not df_exists %}
+            <div class="card glass-panel text-center py-5 px-4" data-aos="fade-left">
+                <i class="fa-solid fa-shapes text-primary display-3 mb-4 opacity-50"></i>
+                <h3 class="font-heading fw-bold">No Dataset Loaded</h3>
+                <p class="text-muted mx-auto" style="max-width: 500px;">Select a customer profiling sample or upload custom CSV datasets to experiment with unsupervised clustering groupings.</p>
+                <button class="btn btn-primary-glow mt-2 align-self-center" onclick="document.querySelector('select[name=sample_name]').focus()">
+                    Choose Sample Data
+                </button>
+            </div>
+            {% else %}
+            
+            <div class="tabs-container mb-4">
+                <ul class="nav custom-nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="data-tab" data-bs-toggle="tab" data-bs-target="#data-pane" type="button" role="tab"><i class="fa-solid fa-table-list me-2"></i>Preview & Shapes</button>
+                    </li>
+                    {% if results %}
+                    <li class="nav-item">
+                        <button class="nav-link" id="clust-tab" data-bs-toggle="tab" data-bs-target="#clust-pane" type="button" role="tab"><i class="fa-solid fa-circle-nodes me-2"></i>Clustering Clusters</button>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div class="tab-content">
+                <!-- Preview -->
+                <div class="tab-pane fade show active" id="data-pane" role="tabpanel">
+                    <div class="card glass-card mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="font-heading fw-bold m-0">Dataset Description</h5>
+                            <span class="badge bg-primary-light text-primary">Shape: {{ shape[0] }} x {{ shape[1] }}</span>
+                        </div>
+                        <div class="custom-table-container">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        {% for col in columns %}
+                                            <th>{{ col }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in preview_data %}
+                                    <tr>
+                                        {% for col in columns %}
+                                            <td>{{ row[col] }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clustering Results -->
+                {% if results %}
+                <div class="tab-pane fade" id="clust-pane" role="tabpanel">
+                    <!-- Metrics Row -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-4">
+                            <div class="stat-card glass-panel" style="border-top: 4px solid var(--primary);">
+                                <div>
+                                    <small class="text-muted text-uppercase fw-bold" style="font-size: 10px;">Silhouette Score</small>
+                                    <h4 class="m-0 font-heading fw-bold mt-1 text-primary">{{ "%.4f"|format(results.silhouette) if results.silhouette else 'N/A' }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="stat-card glass-panel" style="border-top: 4px solid var(--secondary);">
+                                <div>
+                                    <small class="text-muted text-uppercase fw-bold" style="font-size: 10px;">Estimated Clusters</small>
+                                    <h4 class="m-0 font-heading fw-bold mt-1 text-secondary">{{ results.n_clusters }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="stat-card glass-panel" style="border-top: 4px solid var(--accent);">
+                                <div>
+                                    <small class="text-muted text-uppercase fw-bold" style="font-size: 10px;">Noise ratio (DBSCAN)</small>
+                                    <h4 class="m-0 font-heading fw-bold mt-1 text-info">{{ "%.1f%%"|format(results.noise_ratio * 100) if results.noise_ratio is not none else '0.0%' }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Plotly 2D Scatter -->
+                    <div class="card glass-card mb-4">
+                        <div class="card-header bg-transparent border-0 pb-0 mb-3">
+                            <h6 class="font-heading fw-bold mb-1">Cluster Visualization</h6>
+                            <small class="text-muted">2D scatter plot of data points colored by cluster assignment</small>
+                            {% if dim_reduced %}
+                            <div class="text-muted small mt-2">
+                                <i class="fa-solid fa-circle-info me-1"></i> Data dimension > 2. Projected to PCA coordinate space for visualization.
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="plot-container">
+                            <div id="clusteringPlot" style="height: 400px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Unsupervised specific diagnostics -->
+                    <div class="row g-4">
+                        {% if elbow_json %}
+                        <div class="col-md-12 mb-4">
+                            <div class="card glass-card">
+                                <div class="card-header bg-transparent border-0 pb-0 mb-3">
+                                    <h6 class="font-heading fw-bold mb-1">Elbow Method Analysis</h6>
+                                    <small class="text-muted">Inertia (Within-cluster sum of squares) vs. Number of Clusters</small>
+                                </div>
+                                <div class="plot-container">
+                                    <div id="elbowPlot" style="height: 350px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleClusteringParams(algo) {
+        const blocks = document.querySelectorAll('.clust-param-block');
+        blocks.forEach(b => b.classList.add('d-none'));
+
+        if (algo === 'kmeans') {
+            document.getElementById('params-kmeans').classList.remove('d-none');
+        } else if (algo === 'hierarchical') {
+            document.getElementById('params-hierarchical').classList.remove('d-none');
+        } else if (algo === 'dbscan') {
+            document.getElementById('params-dbscan').classList.remove('d-none');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if results %}
+            const clustTabBtn = document.getElementById('clust-tab');
+            if (clustTabBtn) {
+                clustTabBtn.addEventListener('shown.bs.tab', function () {
+                    const plotData = {{ cluster_plot_json | safe }};
+                    Plotly.newPlot('clusteringPlot', plotData.data, plotData.layout, {responsive: true});
+                    
+                    {% if elbow_json %}
+                        const elbowData = {{ elbow_json | safe }};
+                        Plotly.newPlot('elbowPlot', elbowData.data, elbowData.layout, {responsive: true});
+                    {% endif %}
+                });
+            }
+        {% endif %}
+
+        const selector = document.getElementById('algoSelector');
+        if (selector) toggleClusteringParams(selector.value);
+    });
+</script>
+{% endblock %}

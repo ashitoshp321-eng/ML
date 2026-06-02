@@ -1,0 +1,118 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Register - ML Testing Platform{% endblock %}
+{% block page_header %}Create Account{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-center py-5" style="min-height: 80vh;">
+    <div class="card glass-card auth-card shadow-lg" data-aos="zoom-in" data-aos-duration="600">
+        <div class="card-body p-4 p-sm-5">
+            <!-- Brand Info -->
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center bg-primary-light rounded-circle p-3 mb-3" style="width: 70px; height: 70px;">
+                    <i class="fa-solid fa-user-plus fs-3" style="color: var(--primary);"></i>
+                </div>
+                <h3 class="font-heading fw-bold">Get Started</h3>
+                <p class="text-muted small">Register to start training and testing machine learning models</p>
+            </div>
+            
+            <!-- Register Form -->
+            <form action="{{ url_for('register') }}" method="POST" id="registerForm" class="needs-validation" novalidate>
+                <div class="mb-3">
+                    <label for="fullname" class="form-label small fw-bold">Full Name</label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="background: transparent; border-color: var(--border-color); color: var(--color-text-muted);">
+                            <i class="fa-solid fa-id-card"></i>
+                        </span>
+                        <input type="text" class="form-control" id="fullname" name="fullname" placeholder="John Doe" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label small fw-bold">Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="background: transparent; border-color: var(--border-color); color: var(--color-text-muted);">
+                            <i class="fa-solid fa-envelope"></i>
+                        </span>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="john@example.com" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="username" class="form-label small fw-bold">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="background: transparent; border-color: var(--border-color); color: var(--color-text-muted);">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="johndoe123" required>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="password" class="form-label small fw-bold">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="background: transparent; border-color: var(--border-color); color: var(--color-text-muted);">
+                            <i class="fa-solid fa-key"></i>
+                        </span>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Create password" required>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="confirm_password" class="form-label small fw-bold">Confirm Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="background: transparent; border-color: var(--border-color); color: var(--color-text-muted);">
+                            <i class="fa-solid fa-shield"></i>
+                        </span>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Repeat password" required>
+                    </div>
+                    <div id="passwordMismatch" class="text-danger small mt-1 d-none">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i> Passwords do not match.
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary-glow w-100 py-2.5 font-heading mb-3">
+                    <i class="fa-solid fa-user-plus me-2"></i> Register Account
+                </button>
+            </form>
+            
+            <div class="text-center mt-3">
+                <span class="small text-muted">Already have an account? </span>
+                <a href="{{ url_for('login') }}" class="small fw-bold text-decoration-none" style="color: var(--primary);">Login here</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('registerForm');
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirm_password');
+        const mismatchWarning = document.getElementById('passwordMismatch');
+
+        form.addEventListener('submit', function(event) {
+            if (password.value !== confirmPassword.value) {
+                event.preventDefault();
+                event.stopPropagation();
+                mismatchWarning.classList.remove('d-none');
+                confirmPassword.setCustomValidity('Passwords must match');
+            } else {
+                mismatchWarning.classList.add('d-none');
+                confirmPassword.setCustomValidity('');
+            }
+            form.classList.add('was-validated');
+        });
+
+        // Clear warning on input
+        confirmPassword.addEventListener('input', function() {
+            if (password.value === confirmPassword.value) {
+                mismatchWarning.classList.add('d-none');
+                confirmPassword.setCustomValidity('');
+            }
+        });
+    });
+</script>
+{% endblock %}

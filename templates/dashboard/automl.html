@@ -1,0 +1,119 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}AutoML Advisor - ML Testing Platform{% endblock %}
+{% block page_header %}AutoML Intelligence Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row g-4">
+        <!-- 1. Left Selection: Upload dataset for Auto recommendation -->
+        <div class="col-lg-5 col-xl-4">
+            <div class="card glass-card" data-aos="fade-right">
+                <h5 class="font-heading fw-bold mb-3"><i class="fa-solid fa-wand-magic-sparkles text-primary me-2"></i>Select Dataset to Analyze</h5>
+                <form action="{{ url_for('automl_recommend') }}" method="POST" enctype="multipart/form-data" class="trigger-loading-form" data-loading-msg="Analyzing Dataset Characteristics...">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Select Sample Dataset</label>
+                        <select class="form-select font-heading" name="sample_name" onchange="this.form.submit()">
+                            <option value="">-- Choose Sample CSV --</option>
+                            {% for sample in samples %}
+                                <option value="{{ sample }}" {% if active_dataset == sample %}selected{% endif %}>{{ sample.replace('_', ' ').replace('.csv', '').title() }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="text-center my-2 text-muted small fw-bold">— OR —</div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Upload Custom CSV</label>
+                        <input class="form-control" type="file" name="file" accept=".csv" onchange="if(this.value) this.form.submit()">
+                    </div>
+                </form>
+            </div>
+            
+            {% if df_exists %}
+            <!-- Interactive Dataset Spec Details -->
+            <div class="card glass-card mt-4" data-aos="fade-right" data-aos-delay="100">
+                <h5 class="font-heading fw-bold mb-3"><i class="fa-solid fa-circle-info text-secondary me-2"></i>Dataset Specs</h5>
+                <ul class="list-group list-group-flush bg-transparent">
+                    <li class="list-group-item bg-transparent d-flex justify-content-between px-0 py-2.5">
+                        <span class="text-muted small">Total Rows (N)</span>
+                        <span class="fw-bold font-heading">{{ shape[0] }}</span>
+                    </li>
+                    <li class="list-group-item bg-transparent d-flex justify-content-between px-0 py-2.5">
+                        <span class="text-muted small">Features Count (P)</span>
+                        <span class="fw-bold font-heading">{{ shape[1] }}</span>
+                    </li>
+                    <li class="list-group-item bg-transparent d-flex justify-content-between px-0 py-2.5">
+                        <span class="text-muted small">Data Completeness</span>
+                        <span class="fw-bold font-heading text-{{ 'success' if missing_ratio == 0 else 'warning' }}">{{ "%.2f%%"|format((1 - missing_ratio)*100) }}</span>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 2. Right Workings Panel: Recommendations Output -->
+        <div class="col-lg-7 col-xl-8">
+            {% if not df_exists %}
+            <!-- Explanatory intro -->
+            <div class="card glass-panel text-center py-5 px-4" data-aos="fade-left">
+                <i class="fa-solid fa-wand-magic-sparkles text-primary display-3 mb-4 opacity-50"></i>
+                <h3 class="font-heading fw-bold">Ready to Advise</h3>
+                <p class="text-muted mx-auto" style="max-width: 500px;">Select a dataset, and our rule-based AutoML parser will immediately calculate feature sizes, check columns, and recommend the best algorithm and parameters to train.</p>
+            </div>
+            {% else %}
+            <!-- Recommendations Cards -->
+            <div class="card glass-card border-start" style="border-left: 6px solid var(--primary) !important;" data-aos="fade-left">
+                <h5 class="font-heading fw-bold text-uppercase text-primary small mb-1" style="letter-spacing: 1px;">AutoML Recommendation</h5>
+                <h2 class="font-heading fw-bold my-3">Primary Choice: {{ recommendation.name }}</h2>
+                <p class="text-muted mb-4">{{ recommendation.description }}</p>
+                
+                <!-- Decision rationale checklists -->
+                <div class="mb-4">
+                    <h6 class="font-heading fw-bold text-main mb-3"><i class="fa-solid fa-shield-halved text-success me-2"></i>Analysis Rationale Decision Checklist</h6>
+                    <div class="row g-2">
+                        {% for rationale in recommendation.rationales %}
+                        <div class="col-md-6">
+                            <div class="p-2.5 rounded glass-panel d-flex align-items-center gap-2 small">
+                                <i class="fa-solid fa-circle-check text-success fs-5"></i>
+                                <span>{{ rationale }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Suggested Actions -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center border-top pt-4 gap-3" style="border-color: var(--border-color) !important;">
+                    <div>
+                        <span class="text-muted small">Task Category Differentiated:</span>
+                        <h6 class="m-0 font-heading fw-bold text-secondary text-uppercase">{{ recommendation.task_type }}</h6>
+                    </div>
+                    <a href="{{ url_for('supervised_dashboard', task_type=recommendation.task_type, algo_id=recommendation.id) }}" class="btn btn-primary-glow font-heading py-2.5 px-4 shadow">
+                        <i class="fa-solid fa-play me-2"></i> Deploy & Train Model
+                    </a>
+                </div>
+            </div>
+
+            <!-- Alternative options list -->
+            <div class="card glass-card mt-4" data-aos="fade-up">
+                <h5 class="font-heading fw-bold mb-3"><i class="fa-solid fa-list-ul text-accent me-2"></i>Alternative Models Considered</h5>
+                <div class="row g-3">
+                    {% for alt in recommendation.alternatives %}
+                    <div class="col-md-6">
+                        <div class="p-3 rounded glass-panel border h-100" style="border-color: var(--border-color) !important;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="m-0 font-heading fw-bold text-main">{{ alt.name }}</h6>
+                                <span class="badge bg-secondary-light text-secondary small">{{ alt.reason }}</span>
+                            </div>
+                            <p class="text-muted small mb-0">{{ alt.desc }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

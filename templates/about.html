@@ -1,0 +1,105 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}About Platform - ML Testing Platform{% endblock %}
+{% block page_header %}About Platform{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Educational block: What is ML -->
+    <div class="card glass-card mb-4" data-aos="fade-up">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-8">
+                <h5 class="text-primary text-uppercase font-heading fw-bold small" style="letter-spacing: 1.5px;">Core Concept</h5>
+                <h2 class="font-heading fw-bold my-2">What is Machine Learning?</h2>
+                <p class="text-muted leading-relaxed">
+                    Machine Learning (ML) is a branch of Artificial Intelligence (AI) focused on building systems that learn from data, identify patterns, and make decisions with minimal human intervention. Instead of being explicitly programmed with static rules, ML algorithms use mathematical models to find hidden structures in historical training inputs and make inferences on unseen observations.
+                </p>
+            </div>
+            <div class="col-lg-4 text-center d-none d-lg-block">
+                <i class="fa-solid fa-brain text-primary opacity-50" style="font-size: 100px;"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Types of ML -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6" data-aos="fade-right" data-aos-delay="100">
+            <div class="card glass-card h-100">
+                <h4 class="font-heading fw-bold text-primary mb-3"><i class="fa-solid fa-square-poll-vertical me-2"></i>Supervised Learning</h4>
+                <p class="text-muted small">
+                    Supervised learning occurs when algorithms are trained on labeled datasets containing both the input features and the correct target label. The model learns a mapping function to predict the target for new inputs.
+                </p>
+                <ul class="list-unstyled small text-muted">
+                    <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-1"></i> <strong>Regression</strong>: Predicts continuous numerical values (e.g. house pricing).</li>
+                    <li><i class="fa-solid fa-circle-check text-success me-1"></i> <strong>Classification</strong>: Predicts discrete categorical tags (e.g. flower species).</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-6" data-aos="fade-left" data-aos-delay="100">
+            <div class="card glass-card h-100">
+                <h4 class="font-heading fw-bold text-secondary mb-3"><i class="fa-solid fa-shapes me-2"></i>Unsupervised Learning</h4>
+                <p class="text-muted small">
+                    Unsupervised learning occurs when models analyze unlabeled datasets. The algorithm attempts to discover underlying structures, mathematical groupings, or dimensions without explicit supervision.
+                </p>
+                <ul class="list-unstyled small text-muted">
+                    <li class="mb-2"><i class="fa-solid fa-circle-check text-success me-1"></i> <strong>Clustering</strong>: Grouping data elements based on feature similarity (e.g. customer segments).</li>
+                    <li><i class="fa-solid fa-circle-check text-success me-1"></i> <strong>Dim Reduction</strong>: Compressing high-dimensional feature counts (e.g. PCA component projections).</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technologies Grid -->
+    <div class="card glass-card mb-4" data-aos="fade-up">
+        <h4 class="font-heading fw-bold mb-4 text-center">Technological Stack</h4>
+        <div class="row g-3 text-center">
+            {% for tech_icon, tech_name, tech_cat in [
+                ('fa-brands fa-python text-primary', 'Python Flask', 'Backend framework & Routing'),
+                ('fa-solid fa-gears text-secondary', 'Scikit-Learn', 'ML Estimators & Metrics'),
+                ('fa-solid fa-database text-accent', 'Firebase Firestore', 'Cloud document collections DB'),
+                ('fa-solid fa-chart-simple text-success', 'Pandas & NumPy', 'Data arrays & statistics'),
+                ('fa-brands fa-bootstrap text-danger', 'Bootstrap 5', 'CSS Framework & layout grid'),
+                ('fa-solid fa-chart-pie text-warning', 'Plotly & Chart.js', 'Interactive visualizations')
+            ] %}
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="p-3 rounded glass-panel h-100 border" style="border-color: var(--border-color) !important;">
+                    <i class="{{ tech_icon }} fs-2 mb-2"></i>
+                    <h6 class="font-heading fw-bold text-main m-0 small">{{ tech_name }}</h6>
+                    <small class="text-muted text-xxs d-block mt-1">{{ tech_cat }}</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Objective & Developer cards -->
+    <div class="row g-4">
+        <div class="col-md-7" data-aos="fade-right">
+            <div class="card glass-card h-100">
+                <h4 class="font-heading fw-bold mb-3">Project Objective</h4>
+                <p class="text-muted small leading-relaxed">
+                    This platform serves as a complete sandbox environment for machine learning diagnostics. By wrapping standard Python analytical packages in a rich, reactive, and beautiful glassmorphism frontend interface, we enable developers, academics, and portfolio evaluators to instantly inspect preprocessing logic, fit models, contrast accuracy leaderboards, test custom values, and export report-ready printable audits.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-5" data-aos="fade-left">
+            <div class="card glass-card h-100">
+                <h4 class="font-heading fw-bold mb-3">Developer Information</h4>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-primary-light rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
+                        <i class="fa-solid fa-code text-primary fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="m-0 font-heading fw-bold text-main">Antigravity AI Team</h6>
+                        <small class="text-muted">Lead Pair-Programming Agents</small>
+                        <div class="d-flex gap-2 mt-1">
+                            <a href="#" class="text-muted small text-decoration-none"><i class="fa-brands fa-github me-1"></i>github</a>
+                            <a href="#" class="text-muted small text-decoration-none"><i class="fa-solid fa-envelope me-1"></i>email</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
